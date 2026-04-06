@@ -1,0 +1,124 @@
+import sys
+import os
+
+# Add the project root to sys.path so that 'src' can be imported regardless of where main.py runs from
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
+from src.models import Destination
+from src.storage import load_trips, save_trips
+
+def main():
+    collection = load_trips()
+    
+    while True:
+        print("\n=== Trip Notes ===")
+        print("\n-- Data --")
+        print("[1] Add destination")
+        print("[2] View all destinations")
+        print("[3] Search by country")
+        print("[4] Add note to a destination")
+        print("[6] Mark as Visited")
+        print("[7] Wishlist / Visited Stats")
+        print("\n-- AI --")
+        print("(coming soon)")
+        print("\n[Q] Quit")
+        
+        choice = input("\nChoice: ")
+        
+        if choice.lower() == "q":
+            print("Goodbye!")
+            break
+            
+        elif choice == "1":
+            name = input("Destination name: ")
+            country = input("Country: ")
+            budget_str = input("Budget (in USD): ")
+            try:
+                budget = float(budget_str) if budget_str else 0.0
+            except ValueError:
+                print("Invalid budget, defaulting to 0.")
+                budget = 0.0
+            
+            dest = Destination(name=name, country=country, budget=budget)
+            collection.add(dest)
+            save_trips(collection)
+            print(f"Added {name} to your trips!")
+            
+        elif choice == "2":
+            trips = collection.get_all()
+            if not trips:
+                print("No destinations yet.")
+                continue
+            for idx, dest in enumerate(trips):
+                status = "Visited" if dest.visited else "Wishlist"
+                print(f"[{idx}] {dest.name}, {dest.country} | Budget: ${dest.budget:.2f} | Added: {dest.date_added} | {status}")
+                if dest.notes:
+                    for note in dest.notes:
+                        print(f"    - {note}")
+                        
+        elif choice == "3":
+            country = input("Country to search for: ")
+            matches = collection.search_by_country(country)
+            if not matches:
+                print("No matches found.")
+            else:
+                for dest in matches:
+                    status = "Visited" if dest.visited else "Wishlist"
+                    print(f"- {dest.name}, {dest.country} | Budget: ${dest.budget:.2f} | {status}")
+                    
+        elif choice == "4":
+            trips = collection.get_all()
+            if not trips:
+                print("No destinations to add notes to.")
+                continue
+            for idx, dest in enumerate(trips):
+                print(f"[{idx}] {dest.name}, {dest.country}")
+                
+            idx_str = input("Enter destination index: ")
+            try:
+                idx = int(idx_str)
+                dest = collection.get_by_index(idx)
+                note = input("Enter your note: ")
+                dest.add_note(note)
+                save_trips(collection)
+                print("Note added!")
+            except (ValueError, IndexError):
+                print("Invalid index.")
+                
+        elif choice == "6":
+            trips = collection.get_all()
+            unvisited_exist = False
+            for idx, dest in enumerate(trips):
+                if not dest.visited:
+                    print(f"[{idx}] {dest.name}, {dest.country}")
+                    unvisited_exist = True
+            if not unvisited_exist:
+                print("No active wishlist destinations to mark as visited.")
+                continue
+                
+            idx_str = input("Enter index of destination to mark as visited: ")
+            try:
+                idx = int(idx_str)
+                collection.mark_visited(idx)
+                save_trips(collection)
+                print("Marked as visited!")
+            except (ValueError, IndexError):
+                print("Invalid index.")
+                
+        elif choice == "7":
+            wishlist = collection.get_wishlist()
+            visited = collection.get_visited()
+            print(f"\n--- Visited: {len(visited)} ---")
+            for dest in visited:
+                 print(f"  {dest.name}, {dest.country}")
+            print(f"\n--- Wishlist: {len(wishlist)} ---")
+            for dest in wishlist:
+                 print(f"  {dest.name}, {dest.country}")
+                 
+        else:
+            print("Invalid option. Please try again.")
+
+if __name__ == "__main__":
+    main()
