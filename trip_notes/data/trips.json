@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Tokyo",
+    "country": "Japan",
+    "budget": 3000.0,
+    "notes": [
+      "Very Beautiful"
+    ],
+    "date_added": "2026-04-06",
+    "visited": false
+  },
+  {
+    "name": "NYC",
+    "country": "USA",
+    "budget": 2000.0,
+    "notes": [],
+    "date_added": "2026-04-06",
+    "visited": false
+  }
+]
