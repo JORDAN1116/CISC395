@@ -45,6 +45,27 @@ def ask(user_message: str, system_prompt: str = None, temperature: float = 0.7, 
         print("\n[AI Error] Connection failed. Please check your network connection.")
         return None
 
+def generate_trip_briefing(city: str, country: str, notes: list = None) -> dict | None:
+    base = f"Give a 3-sentence travel overview of {city}, {country}. Cover: what it's like to visit, best season to go, and one must-see attraction."
+    if notes is not None and len(notes) > 0:
+        notes_text = "\n".join(f"- {n}" for n in notes)
+        prompt1 = base + f"\n\nPersonal notes about this trip:\n{notes_text}"
+    else:
+        prompt1 = base
+
+    overview = ask(prompt1, system_prompt=TRAVEL_SYSTEM_PROMPT)
+    if overview is None:
+        return None
+
+    prompt2 = f"Based on this destination overview:\n{overview}\n\nWrite a 5-item packing list specific to {city}."
+    packing_list = ask(prompt2, system_prompt=TRAVEL_SYSTEM_PROMPT)
+    if packing_list is None:
+        return None
+
+    return {"overview": overview, "packing_list": packing_list}
+
 if __name__ == "__main__":
-    result = ask("What is the best time of year to visit Japan?", system_prompt=TRAVEL_SYSTEM_PROMPT)
-    print(result)
+    result = generate_trip_briefing("Tokyo", "Japan")
+    if result:
+        print("Overview:", result["overview"])
+        print("\nPacking list:", result["packing_list"])
