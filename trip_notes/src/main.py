@@ -8,7 +8,7 @@ if BASE_DIR not in sys.path:
 
 from src.models import Destination
 from src.storage import load_trips, save_trips
-from src.ai_assistant import ask, TRAVEL_SYSTEM_PROMPT
+from src.ai_assistant import ask, TRAVEL_SYSTEM_PROMPT, generate_trip_briefing
 
 def main():
     collection = load_trips()
@@ -23,6 +23,7 @@ def main():
         print("[5] Mark as Visited")
         print("[6] Wishlist / Visited Stats")
         print("\n-- AI --")
+        print("[7] Trip Briefing")
         print("[8] Ask AI a travel question")
         print("\n[Q] Quit")
         
@@ -118,6 +119,35 @@ def main():
             for dest in wishlist:
                  print(f"  {dest.name}, {dest.country}")
                  
+        elif choice == "7":
+            destinations = collection.get_all()
+            if not destinations:
+                print("No trips saved yet.")
+                continue
+                
+            for i, dest in enumerate(destinations, 1):
+                print(f"  [{i}] {dest.name}, {dest.country}")
+                
+            try:
+                index = int(input("Select trip number: ")) - 1
+                if index < 0 or index >= len(destinations):
+                    print("Invalid selection.")
+                    continue
+                
+                dest = destinations[index]
+                print(f"Generating briefing for {dest.name}...")
+                
+                result = generate_trip_briefing(dest.name, dest.country, dest.notes)
+                if result is None:
+                    print("Briefing failed. Check your API connection.")
+                    continue
+                    
+                print(f"\n--- {dest.name} Briefing ---")
+                print(f"Overview:\n{result['overview']}")
+                print(f"\nPacking List:\n{result['packing_list']}")
+            except ValueError:
+                print("Invalid selection.")
+                
         elif choice == "8":
             question = input("Your question: ")
             result = ask(question, system_prompt=TRAVEL_SYSTEM_PROMPT)
