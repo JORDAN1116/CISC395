@@ -8,7 +8,8 @@ if BASE_DIR not in sys.path:
 
 from src.models import Destination
 from src.storage import load_trips, save_trips
-from src.ai_assistant import ask, TRAVEL_SYSTEM_PROMPT, generate_trip_briefing
+from src.ai_assistant import ask, TRAVEL_SYSTEM_PROMPT, generate_trip_briefing, rag_ask
+from src.rag import build_index
 
 def main():
     collection = load_trips()
@@ -25,7 +26,9 @@ def main():
         print("\n-- AI --")
         print("[7] Trip Briefing")
         print("[8] Ask AI a travel question")
-        print("\n[Q] Quit")
+        print("[9] Search my guides")
+        print("\n[R] Rebuild search index")
+        print("[Q] Quit")
         
         choice = input("\nChoice: ")
         
@@ -174,6 +177,16 @@ def main():
                     print(f"Saved as a note on {dest.name}.")
                 except (ValueError, IndexError):
                     print("Invalid trip number.")
+                    
+        elif choice == "9":
+            question = input("Your question: ")
+            result = rag_ask(question)
+            print("\n" + result + "\n")
+            
+        elif choice.lower() == "r":
+            print("Rebuilding index from guides/...")
+            build_index(force=True)
+            print("Done. Use [9] to search your updated guides.")
                  
         else:
             print("Invalid option. Please try again.")

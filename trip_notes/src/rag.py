@@ -87,6 +87,8 @@ def build_index(force: bool = False):
         if not chunks:
             continue
             
+        files_with_chunks += 1
+            
         existing_ids = set()
         if not force:
             existing_data = collection.get()
@@ -112,7 +114,6 @@ def build_index(force: bool = False):
                 embeddings=embeddings
             )
             total_chunks_added += len(ids_to_add)
-            files_with_chunks += 1
             
     print(f"Indexed {total_chunks_added} chunks from {files_with_chunks} files.")
 
