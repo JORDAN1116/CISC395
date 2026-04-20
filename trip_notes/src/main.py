@@ -10,6 +10,7 @@ from src.models import Destination
 from src.storage import load_trips, save_trips
 from src.ai_assistant import ask, TRAVEL_SYSTEM_PROMPT, generate_trip_briefing, rag_ask
 from src.rag import build_index
+from src.tools import run_agent
 
 def main():
     collection = load_trips()
@@ -27,6 +28,7 @@ def main():
         print("[7] Trip Briefing")
         print("[8] Ask AI a travel question")
         print("[9] Search my guides")
+        print("[10] AI Travel Agent")
         print("\n[R] Rebuild search index")
         print("[Q] Quit")
         
@@ -182,6 +184,36 @@ def main():
             question = input("Your question: ")
             result = rag_ask(question)
             print("\n" + result + "\n")
+            
+        elif choice == "10":
+            print("The agent can calculate budgets, check real-time weather, and search your travel guides.")
+            question = input("Your question: ")
+            print("\nThinking...\n")
+            
+            result = run_agent(question)
+            if result is None:
+                print("Agent failed to respond.")
+                continue
+                
+            print("\nAgent answer:\n" + result)
+            
+            save_ans = input("Save this as a note on a trip? (y/n): ")
+            if save_ans.lower() == "y":
+                trips = collection.get_all()
+                if not trips:
+                    print("No trips saved yet.")
+                    continue
+                for idx, dest in enumerate(trips):
+                    print(f"[{idx + 1}] {dest.name}, {dest.country}")
+                
+                try:
+                    trip_num = int(input("Trip number: ")) - 1
+                    dest = collection.get_by_index(trip_num)
+                    dest.add_note(result)
+                    save_trips(collection)
+                    print(f"Saved as a note on {dest.name}.")
+                except (ValueError, IndexError):
+                    print("Invalid trip number.")
             
         elif choice.lower() == "r":
             print("Rebuilding index from guides/...")
